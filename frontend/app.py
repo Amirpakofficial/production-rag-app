@@ -4,7 +4,6 @@ import streamlit as st
 
 st.set_page_config(
     page_title="RAG Chatbot",
-    page_icon="🔍",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -213,7 +212,7 @@ def reset_database() -> str:
 
 
 with st.sidebar:
-    st.markdown('<div class="app-title">🔍 RAG Chat</div>', unsafe_allow_html=True)
+    st.markdown('<div class="app-title">RAG Chat</div>', unsafe_allow_html=True)
     st.markdown('<div class="app-subtitle">retrieval-augmented generation</div>', unsafe_allow_html=True)
 
     status = fetch_status()
@@ -235,7 +234,7 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.markdown("#### 📄 Upload Documents")
+    st.markdown("#### Upload Documents")
     uploaded_files = st.file_uploader(
         "PDF or TXT files",
         type=["pdf", "txt"],
@@ -244,21 +243,21 @@ with st.sidebar:
     )
 
     if uploaded_files:
-        if st.button("⬆️  Index Documents", use_container_width=True):
+        if st.button("Index Documents", use_container_width=True):
             with st.spinner("Processing... (first run downloads the embedding model ~90MB)"):
                 result = upload_files(uploaded_files)
             if "error" in result:
                 st.error(f"Failed: {result['error']}")
             else:
                 st.success(
-                    f"✅ {result.get('files_processed', 0)} file(s) · "
+                    f"{result.get('files_processed', 0)} file(s) · "
                     f"{result.get('chunks_added', 0)} chunks added"
                 )
                 st.rerun()
 
     st.markdown("---")
 
-    st.markdown("#### ⚙️ LLM Settings")
+    st.markdown("#### LLM Settings")
     st.session_state.llm_api_key = st.text_input(
         "API Key", value=st.session_state.llm_api_key,
         type="password", placeholder="sk-...",
@@ -271,11 +270,11 @@ with st.sidebar:
         "Model Name", value=st.session_state.llm_model,
         placeholder="gpt-4o-mini",
     )
-    st.caption("Supports OpenAI, Groq, Together AI, Ollama…")
+    st.caption("Supports OpenAI, Groq, Together AI, Ollama")
 
     st.markdown("---")
 
-    st.markdown("#### 🗑️ Controls")
+    st.markdown("#### Controls")
     col1, col2 = st.columns(2)
     with col1:
         if st.button("Clear Chat", use_container_width=True):
@@ -291,19 +290,19 @@ with st.sidebar:
 
 st.markdown("### Ask your documents")
 st.caption(
-    f"{'📚 ' + str(st.session_state.doc_count) + ' chunks ready' if st.session_state.doc_count else '⚠️ No documents indexed — upload files in the sidebar'}"
+    f"{str(st.session_state.doc_count) + ' chunks ready' if st.session_state.doc_count else 'No documents indexed — upload files in the sidebar'}"
 )
 st.markdown("---")
 
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar="🧑" if msg["role"] == "user" else "🤖"):
+    with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
         if msg["role"] == "assistant" and msg.get("sources"):
-            with st.expander(f"📎 {len(msg['sources'])} source(s)", expanded=False):
+            with st.expander(f"{len(msg['sources'])} source(s)", expanded=False):
                 for src in msg["sources"]:
                     st.markdown(
                         f'<div class="source-card">'
-                        f'<strong>📄 {src["source"]}</strong>'
+                        f'<strong>{src["source"]}</strong>'
                         f'{(" · page " + str(src["page"])) if src.get("page") else ""}'
                         f'<br><span style="color:#666">{src["content"]}</span>'
                         f'</div>',
@@ -312,10 +311,10 @@ for msg in st.session_state.messages:
 
 if prompt := st.chat_input("Ask something about your documents…"):
     if st.session_state.doc_count == 0:
-        st.warning("⚠️ Please upload and index documents first.")
+        st.warning("Please upload and index documents first.")
     else:
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user", avatar="🧑"):
+        with st.chat_message("user"):
             st.markdown(prompt)
 
         history = [
@@ -323,7 +322,7 @@ if prompt := st.chat_input("Ask something about your documents…"):
             for m in st.session_state.messages[:-1]
         ]
 
-        with st.chat_message("assistant", avatar="🤖"):
+        with st.chat_message("assistant"):
             placeholder = st.empty()
             full_answer = ""
             final_sources = []
@@ -337,11 +336,11 @@ if prompt := st.chat_input("Ask something about your documents…"):
                 placeholder.markdown(full_answer)
 
                 if final_sources:
-                    with st.expander(f"📎 {len(final_sources)} source(s)", expanded=False):
+                    with st.expander(f"{len(final_sources)} source(s)", expanded=False):
                         for src in final_sources:
                             st.markdown(
                                 f'<div class="source-card">'
-                                f'<strong>📄 {src["source"]}</strong>'
+                                f'<strong>{src["source"]}</strong>'
                                 f'{(" · page " + str(src["page"])) if src.get("page") else ""}'
                                 f'<br><span style="color:#666">{src["content"]}</span>'
                                 f'</div>',
@@ -349,10 +348,10 @@ if prompt := st.chat_input("Ask something about your documents…"):
                             )
 
             except requests.exceptions.ConnectionError:
-                full_answer = "❌ Cannot connect to backend. Make sure FastAPI is running on port 8000."
+                full_answer = "Cannot connect to backend. Make sure FastAPI is running on port 8000."
                 placeholder.error(full_answer)
             except Exception as e:
-                full_answer = f"❌ Error: {str(e)}"
+                full_answer = f"Error: {str(e)}"
                 placeholder.error(full_answer)
 
         st.session_state.messages.append({
